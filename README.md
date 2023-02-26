@@ -1,2 +1,2 @@
-# be-shop-react-redux-cloudfront
+# Back End part of online shop
 AWS by EPAM
