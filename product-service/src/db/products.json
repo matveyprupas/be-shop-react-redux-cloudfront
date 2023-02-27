@@ -1,27 +1,27 @@
 [
     {
         "title": "iPhone 11",
-        "cost": 417,
+        "price": 417,
         "amount": 200
     },
     {
         "title": "iPhone 13 mini",
-        "cost": 617,
+        "price": 617,
         "amount": 180
     },
     {
         "title": "iPhone 14 Pro",
-        "cost": 1417,
+        "price": 1417,
         "amount": 1200
     },
     {
         "title": "iPhone XS MAX",
-        "cost": 599,
+        "price": 599,
         "amount": 20
     },
     {
         "title": "iPhone XS",
-        "cost": 417,
+        "price": 417,
         "amount": 200
     }
 ]
