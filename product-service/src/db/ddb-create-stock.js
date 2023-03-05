@@ -6,8 +6,8 @@ AWS.config.loadFromPath('./config.json');
 // Create DynamoDB service object
 const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
-const productsTable = 'products';
-const stockTable = 'stock';
+const productsTable = 'serverless_products';
+const stockTable = 'serverless_stock';
 
 let itemsIds = [];
 

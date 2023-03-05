@@ -23,6 +23,54 @@ const serverlessConfiguration: AWS = {
   },
   // import the function via paths
   functions: { getProductsList, getProductsById },
+  resources: {
+    Resources: {
+      ProductsTable: {
+        Type: 'AWS::DynamoDB::Table',
+        Properties: {
+          TableName: 'serverless_products',
+          AttributeDefinitions: [
+            {
+              AttributeName: 'id',
+              AttributeType: 'S'
+            }
+          ],
+          KeySchema: [
+            {
+              AttributeName: 'id',
+              KeyType: 'HASH'
+            }
+          ],
+          ProvisionedThroughput: {
+            ReadCapacityUnits: 2,
+            WriteCapacityUnits: 1
+          }
+        }
+      },
+      StockTable: {
+        Type: 'AWS::DynamoDB::Table',
+        Properties: {
+          TableName: 'serverless_stock',
+          AttributeDefinitions: [
+            {
+              AttributeName: 'product_id',
+              AttributeType: 'S'
+            }
+          ],
+          KeySchema: [
+            {
+              AttributeName: 'product_id',
+              KeyType: 'HASH'
+            }
+          ],
+          ProvisionedThroughput: {
+            ReadCapacityUnits: 2,
+            WriteCapacityUnits: 1
+          }
+        }
+      }
+    }
+  },
   package: { individually: true },
   custom: {
     esbuild: {
