@@ -1,5 +1,4 @@
 const AWS = require('aws-sdk');
-const crypto = require('crypto');
 
 AWS.config.loadFromPath('./config.json');
 
@@ -24,7 +23,7 @@ ddb.scan({TableName: productsTable}, (err, data) => {
           count: {
             N: `${i ? Math.floor(Math.random()*1000) : 2}`
           }
-          }
+        }
       };
       console.log(params);
       post(params);
