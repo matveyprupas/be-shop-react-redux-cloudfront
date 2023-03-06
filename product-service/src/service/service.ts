@@ -65,36 +65,38 @@ export const getProductByIdService = async (id: string) => {
 
 export const createProductService = async (product: ProductType) => {
     const id = randomUUID();
-    const paramsProducts = {
-        TableName : TABLE_NAME_PRODUCTS,
-        Item: {
-            id: id,
-            title: product.title || '',
-            description: product.description || '',
-            price: product.price || 0
-        }
-      };
-    const paramsStock = {
-        TableName : TABLE_NAME_STOCK,
-        Item: {
-            product_id: id,
-            count: product.count || 0
-        }
+    const params = {
+        TransactItems: [{
+            Put: {
+              TableName: TABLE_NAME_PRODUCTS,
+              Item: {
+                    id: id,
+                    title: product.title || '',
+                    description: product.description || '',
+                    price: product.price || 0
+                }
+            }
+        }, 
+        {
+            Put: {
+              TableName: TABLE_NAME_STOCK,
+              Item: {
+                    product_id: id,
+                    count: product.count || 0
+                }
+            }
+        }]
       };
 
     try {
-        await ddb.put(paramsProducts, (err, data) => {
+        await ddb.transactWrite(params, (err, data) => {
             if (err) console.log('Products error: ', err);
             else console.log('Products success: ', data);
-          }).promise();
-        await ddb.put(paramsStock, (err, data) => {
-            if (err) console.log('Stock error: ', err);
-            else console.log('Stock success: ', data);
           }).promise();
 
         return {
             message: 'Success',
-            data: {...paramsProducts.Item, count: paramsStock.Item.count}
+            data: {...params.TransactItems[0].Put.Item, count: params.TransactItems[1].Put.Item.count}
         };
     } catch ( err ) {
         return {
