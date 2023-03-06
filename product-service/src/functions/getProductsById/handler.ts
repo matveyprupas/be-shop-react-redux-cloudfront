@@ -2,16 +2,13 @@ import type { ValidatedEventAPIGatewayProxyEvent } from '@libs/api-gateway';
 import { formatJSONResponse } from '@libs/api-gateway';
 import { middyfy } from '@libs/lambda';
 import cors from '@middy/http-cors'
-import { getOneProductsById } from 'src/utils/utils';
+import { getProductByIdService } from 'src/service/service';
 
 import schema from './schema';
 
 const getProductsById: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (event) => {
   const id = event.pathParameters.productId.toLowerCase();
-
-  const product = await getOneProductsById(id);
-
-  return formatJSONResponse(product);
+  return formatJSONResponse(await getProductByIdService(id));
 };
 
 export const main = middyfy(getProductsById).use(cors());
