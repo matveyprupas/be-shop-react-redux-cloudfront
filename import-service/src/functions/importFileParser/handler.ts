@@ -1,63 +1,58 @@
-import { formatJSONResponse, ValidatedEventAPIGatewayProxyEvent } from '@libs/api-gateway';
-import { middyfy } from '@libs/lambda';
-import cors from '@middy/http-cors'
-import { createReadStream } from 'fs';
-const AWS = require('aws-sdk');
-const { S3Client } = require('@aws-sdk/client-s3');
-
+import { formatJSONResponse } from '@libs/api-gateway';
+import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 const csv = require('csv-parser')
-const BUCKET = 'be-import-service-s3';
-
-// const s3 = new AWS.S3({
-//   region: 'eu-west-1', 
-//   apiVersion: '2006-03-01'
-// });
 
 const importFileParser = async (event) => {
-  console.log('Hello from importFileParser. Event: ', event);
-
-  const s3Client = new S3Client({region: 'eu-west-1'});
-
-  // Get the object from the event and show its content type
-  const bucket = event.Records[0].s3.bucket.name;
-  const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
-  const params = {
-      Bucket: bucket,
-      Key: key,
-  }; 
   const results = [];
   let statusCode = 500;
   let resMessage = 'Somethins was wrong in Lambda importFileParser';
 
-  console.log('params: ', params);
+  const bucket = event.Records[0].s3.bucket.name;
+  const keyUploaded = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
+  
+  const paramsUploaded = {
+    Bucket: bucket,
+    Key: keyUploaded,
+  }; 
+
+  const paramsParsed = {
+      Bucket: bucket,
+      Key: keyUploaded.split('uploaded').join('parsed'),
+  }; 
+
+  console.log(paramsUploaded, paramsParsed, event.Records[0].s3.object.key);
+
+  const s3Client = new S3Client({region: 'eu-west-1'});
+  const getCommand = new GetObjectCommand(paramsUploaded);
+  const putCommand = new PutObjectCommand(paramsParsed);
+  const deleteCommand = new DeleteObjectCommand(paramsUploaded);
+  const result = await s3Client.send(getCommand);
+  const objectStream: NodeJS.ReadableStream = result.Body as NodeJS.ReadableStream;
+
   try {
-      const s3Res = await s3Client.getObject(params).promise();
-      // const readStream = createReadStream(s3Res.Body);
-
-      console.log('s3Res: ', s3Res);
-      // console.log('readStream: ', readStream);
-
-      s3Res.Body
+      await objectStream
         .pipe(csv())
         .on('data', (data) => {
-          console.log(data);
+          console.log('chunk data after csv(): ', data);
           results.push(data);
         })
         .on('end', () => {
           statusCode = 200;
           resMessage = 'File read OK';
-          console.log(results);
+          console.log('results array: ', results);
         })
         .on('error', (error) => {
           console.error(error);
           statusCode = 500;
           resMessage = 'Somethins went wrong inside S3 Readable Stream'
         })
+        await s3Client.send(putCommand);
+        await s3Client.send(deleteCommand);
   } catch (err) {
       console.error(err);
       statusCode = 500;
-      resMessage = `Error getting object ${key} from bucket ${bucket}. Make sure they exist and your bucket is in the same region as this function.`;
-      // throw new Error(message);
+      resMessage = `Error getting object ${keyUploaded} from bucket ${bucket}. Make sure they exist and your bucket is in the same region as this function.`;
+      throw new Error(resMessage);
   }
 
   return formatJSONResponse({
