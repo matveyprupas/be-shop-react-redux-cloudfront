@@ -1,0 +1,27 @@
+[
+    {
+        "title": "iPhone 11",
+        "price": 417,
+        "amount": 200
+    },
+    {
+        "title": "iPhone 13 mini",
+        "price": 617,
+        "amount": 180
+    },
+    {
+        "title": "iPhone 14 Pro",
+        "price": 1417,
+        "amount": 1200
+    },
+    {
+        "title": "iPhone XS MAX",
+        "price": 599,
+        "amount": 20
+    },
+    {
+        "title": "iPhone XS",
+        "price": 417,
+        "amount": 200
+    }
+]
