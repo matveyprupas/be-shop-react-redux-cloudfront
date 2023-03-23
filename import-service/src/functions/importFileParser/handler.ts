@@ -1,5 +1,6 @@
 import { formatJSONResponse } from '@libs/api-gateway';
 import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { SQSClient, SendMessageCommand, SendMessageCommandInput } from "@aws-sdk/client-sqs";
 const csv = require('csv-parser')
 
 const importFileParser = async (event) => {
@@ -23,6 +24,7 @@ const importFileParser = async (event) => {
   console.log(paramsUploaded, paramsParsed, event.Records[0].s3.object.key);
 
   const s3Client = new S3Client({region: 'eu-west-1'});
+  const sqsClient = new SQSClient({region: 'eu-west-1'});
   const getCommand = new GetObjectCommand(paramsUploaded);
   const putCommand = new PutObjectCommand(paramsParsed);
   const deleteCommand = new DeleteObjectCommand(paramsUploaded);
@@ -32,9 +34,20 @@ const importFileParser = async (event) => {
   try {
       await objectStream
         .pipe(csv())
-        .on('data', (data) => {
+        .on('data', async (data) => {
           console.log('chunk data after csv(): ', data);
           results.push(data);
+          const sendMessageCommandInput: SendMessageCommandInput = {
+            MessageBody: JSON.stringify(data),
+            QueueUrl: process.env.SQS_URL
+          }
+          const command = new SendMessageCommand(sendMessageCommandInput);
+          console.log('command after csv(): ', command);
+
+          sqsClient.send(command, (err, data)=>{
+            if(err) console.error('sqsClient Error: ', err)
+            console.log('sqsClient DATA: ', data);
+          });
         })
         .on('end', () => {
           statusCode = 200;
